@@ -15,7 +15,14 @@
     <h1>Friend Finder</h1>
     <h2>Please mark how closely you agree with each of the following statements:</h2>
     <h3>1 = Strongly Disagree // 5 = Strongly Agree</h3>
-    <img width="300">
+    <figure style="float:left;margin-bottom:20px">
+        <img id="userImage" width="300">
+        <figcaption id="userFigcaption"></figcaption>
+    </figure>
+    <figure>
+        <img id="matchImage" width="300">
+        <figcaption id="matchFigcaption"></figcaption>
+    </figure>
     <div id="inputFields">
         Name:
         <input type="text" id="nameInput">
@@ -171,34 +178,17 @@
         <br>
         <button type="button" name="submitButton" value="submitButton" id="submitButton">Submit</button>
     </div>
-    <div id="responseDiv">
+    <br>
+    <br>
+    <br>
+    <br>
+    <div id="responseDiv" style="margin-top: 20px">
         <h1 id="responseHeader"></h1>
     </div>
     <script>
-        $("img").hide();
-        var responseArray = [{
-                name: "Roger Rabbit",
-                array: [2, 3, 4, 5, 2, 3, 2, 1, 3, 5]
-            },
-            {
-                name: "Paul Allen",
-                array: [1, 3, 4, 2, 5, 5, 3, 2, 3, 4]
-            },
-            {
-                name: "Wiley Wiggins",
-                array: [1, 3, 4, 2, 5, 5, 3, 2, 3, 4]
-            }
+        $("figure").hide();
 
-        ]
-        // This Array prototype extension returns the smallest value in an array
-        // Taken from https://stackoverflow.com/a/8934895
-        // NB: Even if the more than one array item shares the lowest amount,
-        // only one will be returned
-        // e.g. [2, 3, 1, 1, 5, 1], only array[2] will be returned.
-        Array.min = function (array) {
-            return Math.min.apply(Math, array);
-        };
-        $("button#submitButton").on("click", function (surveyEvaluation) {
+        $("button#submitButton").on("click", function () {
             var userInputs = {
                 name: "",
                 photo: "",
@@ -208,38 +198,50 @@
             console.log("Button was clicked");
             userInputs.name = $("input#nameInput").val();
             userInputs.photo = $("input#photoLink").val();
-            $("img").attr("src", $("input#photoLink").val());
-            $("img").show();
-            $("div#inputFields").hide();
             for (var i = 1; i <= $("div#inputFields select").length; i++) {
                 // The values in a select element are strings, and must be turned into integers
                 userInputs.array.push(parseInt($("select#question" + i + "").val()));
             }
-            // responseArray.push(userInputs);
-            console.log(responseArray);
-            for (var j = 0; j < responseArray.length; j++) {
-                var sum = 0;
-                for (var k = 0; k < userInputs.array.length; k++) {
-                    sum += (Math.abs(userInputs.array[k] - responseArray[j].array[k]));
+            console.log(userInputs);
+            $("img#userImage").attr("src", $("input#photoLink").val());
+            $("figcaption#userFigcaption").html($("input#nameInput").val());
+            $("figure").show();
+            $("div#inputFields").hide();
+
+            $.get("api/friends", function (responseArray) {
+                // Array prototype extension by John Resig
+                // Source: https://johnresig.com/blog/fast-javascript-maxmin/
+                Array.min = function (array) {
+                    return Math.min.apply(Math, array);
                 }
-                sumArray.push(sum);
-            }
-            console.log(sumArray);
-            console.log("The lowest number is: " + Array.min(sumArray));
-            console.log("Closest match is " + responseArray[sumArray.indexOf(Array.min(sumArray))].name);
-            $("h1#responseHeader").html("We found a match for you, " +
-                $("input#nameInput").val() + ". You share a lot in common with " +
-                responseArray[sumArray.indexOf(Array.min(sumArray))].name + "!");
-            responseArray.push(userInputs);
-            console.log(responseArray);
-            $("input#nameInput").val("");
-            $("select.inputSelect").val("1");
+                console.log(responseArray);
+                for (var j = 0; j < responseArray.length; j++) {
+                    var sum = 0;
+                    for (var k = 0; k < userInputs.array.length; k++) {
+                        sum += (Math.abs(userInputs.array[k] - responseArray[j].array[k]));
+                    }
+                    sumArray.push(sum);
+                }
+                console.log(sumArray);
+                console.log("The lowest number is: " + Array.min(sumArray));
+                console.log("Closest match is " + responseArray[sumArray.indexOf(Array.min(sumArray))].name);
+                $("h1#responseHeader").html("We found a match for you, " +
+                    $("input#nameInput").val() + ". You share a lot in common with " +
+                    responseArray[sumArray.indexOf(Array.min(sumArray))].name + "!");
+                responseArray.push(userInputs);
+                console.log(responseArray);
+                $("img#matchImage").attr("src", responseArray[sumArray.indexOf(Array.min(sumArray))].photo);
+                $("figcaption#matchFigcaption").html("Your match: " + responseArray[sumArray.indexOf(Array.min(sumArray))]
+                    .name);
+                $("input#nameInput").val("");
+                $("select.inputSelect").val("1");
+            });
+
+            // responseArray.push(userInputs);
+            // console.log(responseArray);
+
         });
     </script>
-    <!-- <script src="../data/friends.js"></script>
-    <script src="../server.js"></script>
-    <script src="../routing/htmlRoutes.js"></script>
-    <script src="../routing/apiRoutes.js"></script> -->
 </body>
 
 </html>
